@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOLEV · Parking intelligence</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cg stroke-linecap=%27round%27 stroke-width=%273.2%27%3E%3Cpath d=%27M5 5 19 19%27 stroke=%27%235b9bff%27/%3E%3Cpath d=%27M19 5 5 19%27 stroke=%27%231f7bf2%27/%3E%3C/g%3E%3Ccircle cx=%275%27 cy=%275%27 r=%273.4%27 fill=%27%235b9bff%27/%3E%3Ccircle cx=%2719%27 cy=%2719%27 r=%273.4%27 fill=%27%235b9bff%27/%3E%3Ccircle cx=%2719%27 cy=%275%27 r=%273.4%27 fill=%27%231f7bf2%27/%3E%3Ccircle cx=%275%27 cy=%2719%27 r=%273.4%27 fill=%27%231f7bf2%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0f1b3d;
+    --blue:#1f7bf2;
+    --blue-2:#3a8dff;
+    --text:#1a2340;
+    --muted:#5b6478;
+    --line:#e6e9f0;
+    --bg-soft:#f5f7fb;
+    --dark:#0b1428;
+    /* Replace with your own photos: url('hero.jpg') */
+    --hero-img: url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1800&q=70');
+    --street-img: url('https://images.unsplash.com/photo-1708413412387-5f915bfb5d6d?w=1800&q=80&auto=format&fit=crop');
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 32px}
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;gap:10px;border-radius:999px;font-weight:500;font-size:15px;padding:13px 24px;transition:.2s}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover{background:#1669d6}
+  .btn-ghost{border:1.5px solid rgba(255,255,255,.85);color:#fff}
+  .btn-ghost:hover{background:rgba(255,255,255,.1)}
+  .play-ic{width:18px;height:18px;border-radius:50%;background:#fff;display:inline-grid;place-items:center}
+  .play-ic::after{content:"";border-left:6px solid #0b1428;border-top:4px solid transparent;border-bottom:4px solid transparent;margin-left:2px}
+  .link{color:var(--blue);font-weight:500;display:inline-flex;gap:8px;align-items:center}
+  .link:hover{gap:12px}
+
+  /* NAV */
+  nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;height:52px;gap:24px}
+  .logo{margin-right:auto}
+  .logo{font-weight:800;font-size:24px;letter-spacing:.08em;color:var(--navy);display:inline-flex;align-items:center;gap:12px}
+  .logo-mark{width:22px;height:22px;flex:none}
+  .menu{display:flex;gap:26px;font-size:13px;font-weight:500;flex:1;margin-left:18px}
+  .menu a:hover{color:var(--blue)}
+  nav .btn{padding:9px 18px;font-size:14px}
+  .lang{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
+
+  /* HERO */
+  .hero{position:relative;color:#fff;overflow:hidden;display:flex;
+    min-height:max(540px,calc(100vh - 52px - 64px));min-height:max(540px,calc(100svh - 52px - 64px));
+    background:var(--hero-img) center/cover, #1b2436}
+  .hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(6,12,26,.90) 0%,rgba(6,12,26,.62) 44%,rgba(6,12,26,.16) 76%,rgba(6,12,26,.04) 100%)}
+  .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;z-index:0;background:#1b2436}
+  .hero .wrap{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;justify-content:center;padding-top:56px;padding-bottom:56px}
+  .hero .phone-zone{display:none}
+  .play-big{z-index:3;transition:opacity .2s ease}
+  .hero.video-playing .play-big{opacity:0;pointer-events:none}
+  .hero.video-error .play-big{opacity:1;pointer-events:auto}
+  .video-fallback{display:none;position:absolute;z-index:4;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(11,20,40,.82);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:9px 14px;font-size:12px;backdrop-filter:blur(8px)}
+  .hero.video-error .video-fallback{display:block}
+  .hero .eyebrow{color:#fff;font-size:10px}
+  .hero h1{font-size:50px;line-height:1.02;font-weight:700;letter-spacing:-.025em;margin:10px 0 22px}
+  .hero h1 span{color:var(--blue-2)}
+  .hero p.lead{font-size:17px;line-height:1.35;max-width:410px;opacity:.95}
+  .hero-ctas{display:flex;gap:18px;margin:28px 0 30px}
+  .checks{display:flex;gap:22px;font-size:10.5px;flex-wrap:wrap}
+  .checks span{display:flex;align-items:center;gap:8px}
+  .checks span::before{content:"";width:10px;height:5px;border-left:1.8px solid #fff;border-bottom:1.8px solid #fff;transform:rotate(-45deg) translateY(-2px)}
+  .play-big{position:absolute;left:54%;top:48%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.12);backdrop-filter:blur(4px);display:grid;place-items:center;cursor:pointer}
+  .play-big::after{content:"";border-left:18px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:5px}
+
+  /* PHONE */
+  .phone-zone{position:absolute;right:32px;top:50%;margin-top:-203px;width:360px;height:420px}
+  .mount{position:absolute;left:-28px;top:170px;width:258px;height:110px;background:#111;border-radius:14px;z-index:0}
+  .phone{position:absolute;left:0;top:0;width:200px;height:406px;border-radius:32px;background:#0c0c0e;padding:7px;box-shadow:0 20px 50px rgba(0,0,0,.55);z-index:1}
+  .screen{width:100%;height:100%;border-radius:26px;overflow:hidden;background:#e9edf2;position:relative;color:#0f1b3d}
+  .status{display:flex;justify-content:space-between;font-size:8px;font-weight:600;color:#fff;background:#0f1b3d;padding:10px 16px 4px}
+  .apphead{background:#0f1b3d;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:8px 14px 44px;font-weight:700;font-size:13px}
+  .ask{position:absolute;left:10px;right:10px;top:62px;background:#fff;border-radius:10px;padding:12px 10px 8px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:2}
+  .ask p{font-size:9.5px;font-weight:500;line-height:1.3}
+  .ask .yes{background:var(--blue);color:#fff;border-radius:6px;font-size:10px;font-weight:600;padding:7px;margin:9px 0 7px}
+  .ask small{font-size:8px;color:var(--muted)}
+  .map{position:absolute;inset:0;top:52px}
+  .route-card{position:absolute;left:8px;right:8px;bottom:10px;background:#0f1b3d;color:#fff;border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:7.5px}
+  .route-card b{font-size:9px;font-weight:600}
+  .route-card > div:last-child{white-space:nowrap}
+  .chip{position:absolute;background:rgba(18,26,44,.78);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:22px;display:flex;align-items:center;gap:9px;font-size:10.5px;line-height:1.3;padding:9px 14px;z-index:3}
+  .chip.c1{left:158px;top:268px;border-radius:999px}
+  .chip.c2{left:200px;top:338px;border-radius:18px}
+  .chip .ico{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;flex:none}
+  .note{position:absolute;left:230px;top:96px;font-family:'Caveat',cursive;font-size:17px;line-height:1.15;transform:rotate(-6deg);text-align:center;width:120px}
+
+  /* LOGOS */
+  .logos{background:var(--bg-soft);height:64px;display:flex;align-items:center}
+  .logos .wrap{width:100%}
+  .logos .wrap{display:flex;align-items:center;gap:40px}
+  .logos .eyebrow{font-size:9.5px;flex:none}
+  .marquee{flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .track{display:flex;width:max-content;animation:slide 28s linear infinite}
+  .marquee:hover .track{animation-play-state:paused}
+  @keyframes slide{to{transform:translateX(-50%)}}
+  .brand{font-weight:700;font-size:18px;color:#1d2a4d;opacity:.85;letter-spacing:-.01em;white-space:nowrap;padding-right:64px}
+  @media (prefers-reduced-motion:reduce){.track{animation-duration:90s}}
+  @media (max-width:600px){.logos{height:auto;padding:18px 0}.hero{min-height:calc(100svh - 52px - 86px)}.logos .wrap{flex-direction:column;align-items:flex-start;gap:14px}.marquee{width:100%}}
+
+  /* FEATURES */
+  .features{padding:104px 0 104px}
+  .features .wrap{display:grid;grid-template-columns:1fr 1.05fr;gap:96px;align-items:start}
+  .features h2{font-size:36px;line-height:1.12;font-weight:700;letter-spacing:-.022em;color:var(--navy);margin:18px 0 26px}
+  .features .intro p{color:var(--muted);font-size:16px;line-height:1.6;margin-bottom:36px;max-width:430px}
+  .grid4{display:grid;grid-template-columns:1fr 1fr;gap:56px 56px}
+  .feat svg{width:38px;height:38px;color:var(--blue);margin-bottom:18px}
+  .feat h3{font-size:16.5px;font-weight:600;color:var(--navy);line-height:1.25;margin-bottom:10px}
+  .feat p{font-size:14px;color:var(--muted);line-height:1.55}
+
+  /* HOW */
+  .how{margin:0 auto 104px;max-width:1120px;border-radius:24px;overflow:hidden;color:#fff;position:relative;min-height:480px;
+    background:linear-gradient(90deg,rgba(8,14,30,.95) 0%,rgba(8,14,30,.55) 30%,rgba(8,14,30,.15) 46%,rgba(8,14,30,.6) 60%,rgba(8,14,30,.96) 70%),var(--street-img) center/cover,#1b2436;
+    display:grid;grid-template-columns:1fr 1fr;gap:48px;padding:72px 72px;align-items:center}
+  .how .eyebrow{color:#fff;font-size:11px}
+  .how h2{font-size:38px;line-height:1.12;font-weight:700;letter-spacing:-.02em;margin:18px 0 18px}
+  .how p{font-size:15.5px;line-height:1.55;max-width:300px;margin-bottom:34px;opacity:.9}
+  .how .btn{padding:12px 22px;font-size:14px}
+  .steps{list-style:none;justify-self:end;width:390px;position:relative}
+  .steps::before{content:"";position:absolute;left:16px;top:20px;bottom:40px;width:1.5px;background:rgba(255,255,255,.35)}
+  .steps li{display:flex;gap:22px;margin-bottom:30px;position:relative}
+  .steps li:last-child{margin-bottom:0}
+  .steps .n{width:34px;height:34px;border-radius:50%;border:1.5px solid #fff;background:var(--dark);display:grid;place-items:center;font-size:13px;flex:none}
+  .steps li:first-child .n{background:var(--blue);border-color:var(--blue)}
+  .steps b{font-size:15px;font-weight:600;display:block;margin:6px 0 4px}
+  .steps small{font-size:13px;opacity:.72;line-height:1.45}
+
+  /* INTEGRATION */
+  .integ{padding:30px 0 40px}
+  .integ .wrap{display:grid;grid-template-columns:1.1fr .75fr .7fr;gap:40px;align-items:center}
+  .integ h2{font-size:28px;line-height:1.2;font-weight:700;letter-spacing:-.02em;color:var(--navy);margin:14px 0 12px}
+  .integ p{color:var(--muted);font-size:14px;line-height:1.4;margin-bottom:26px}
+  .code{background:var(--dark);border-radius:10px;padding:12px 18px 18px;box-shadow:0 18px 40px rgba(11,20,40,.25);font-family:'JetBrains Mono',monospace;font-size:10.5px;line-height:1.55;color:#dde3f0}
+  .tabs{display:flex;gap:8px;font-family:'Inter';font-size:9.5px;letter-spacing:.06em;margin-bottom:14px;color:#8d96ad}
+  .tabs span{padding:5px 12px;border-radius:5px}
+  .tabs .on{background:#1c2744;color:#fff;font-weight:600}
+  .c{color:#6b7898}.s{color:#b5e27a}
+  .perks{list-style:none;display:grid;gap:16px}
+  .perks li{display:flex;gap:18px;align-items:center;font-size:12px;line-height:1.35}
+  .perks b{font-weight:500;display:block;color:var(--navy)}
+  .perks span{color:var(--muted)}
+  .perks .i{width:36px;height:36px;border-radius:50%;background:var(--bg-soft);display:grid;place-items:center;flex:none;color:var(--navy)}
+  .perks svg{width:17px;height:17px}
+
+  /* RESPONSIVE */
+  @media (max-width:960px){
+    .menu{display:none}
+    nav .wrap{justify-content:space-between}
+    .phone-zone,.play-big{display:none}
+    .features .wrap,.how,.integ .wrap{grid-template-columns:1fr}
+    .features{padding:64px 0}
+    .features .wrap{gap:56px}
+    .grid4{gap:40px 32px}
+    .how{margin:0 16px 64px;padding:48px 28px;min-height:0;background:linear-gradient(rgba(8,14,30,.82),rgba(8,14,30,.9)),var(--street-img) center/cover}
+    .steps{justify-self:start;width:100%;margin-top:26px}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 16px}
+    .hero h1{font-size:38px}
+    .hero-ctas{flex-direction:column;align-items:flex-start}
+    .grid4{grid-template-columns:1fr}
+    .lang,nav .btn{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="#" class="logo" aria-label="NOLEV"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><g stroke-linecap="round"><path d="M5 5 19 19" stroke="#5b9bff" stroke-width="3.2"/><path d="M19 5 5 19" stroke="#1f7bf2" stroke-width="3.2"/></g><g><circle cx="5" cy="5" r="3.4" fill="#5b9bff"/><circle cx="19" cy="19" r="3.4" fill="#5b9bff"/><circle cx="19" cy="5" r="3.4" fill="#1f7bf2"/><circle cx="5" cy="19" r="3.4" fill="#1f7bf2"/></g></svg><span>NOLEV</span></a>
+    <a href="#" class="btn btn-primary">Request a demo <span>→</span></a>
+    <div class="lang">EN <svg width="9" height="9" viewBox="0 0 10 10"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></div>
+  </div>
+</nav>
+
+<header class="hero" id="hero">
+  <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="auto" poster="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1800&q=70">
+    <source src="https://dnznrvs05pmza.cloudfront.net/seedance_2_5/cgt-20260926055326-g69mv/Single_uninterrupted_photorealistic_20_second_premium_automotive_commercial__16_9__no_cuts__no_monta.mp4?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNmVlZGU2ODRhYTM4MmU1YiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ5NjAwNH0.dcwPFB8inYLexA6NWaos3IV9YzR0_Vf_5uQsd_m9Wx0" type="video/mp4">
+  </video>
+  <div class="video-fallback">Tap ▶ to play the NOLEV demo</div>
+  <div class="wrap">
+    <div class="eyebrow">Parking intelligence for mobility apps</div>
+    <h1>Street parking,<br><span>finally made easy.</span></h1>
+    <p class="lead">We detect when a driver needs to park and guide them through the streets where they’re most likely to find a spot.</p>
+    <div class="hero-ctas">
+      <a href="#" class="btn btn-primary">Request a demo <span>→</span></a>
+      <a href="#como" class="btn btn-ghost">See how it works <span class="play-ic"></span></a>
+    </div>
+    <div class="checks">
+      <span>Smoother journeys</span><span>Happier drivers</span><span>More efficient cities</span>
+    </div>
+
+    <div class="play-big" aria-label="Play video"></div>
+
+    <div class="phone-zone">
+      <div class="mount"></div>
+      <div class="phone">
+        <div class="screen">
+          <div class="status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+          <div class="apphead"><span>←</span><span>NOLEV</span><span>⋮⋮</span></div>
+          <div class="ask">
+            <p>Looks like you need to park.<br>Want some help?</p>
+            <div class="yes">Yes, guide me</div>
+            <small>Not now</small>
+          </div>
+          <svg class="map" viewBox="0 0 186 340" preserveAspectRatio="xMidYMid slice">
+            <rect width="186" height="340" fill="#e7ebf0"/>
+            <g stroke="#fff" stroke-width="5">
+              <path d="M-10 150 L200 120"/><path d="M-10 200 L200 185"/><path d="M-10 255 L200 245"/>
+              <path d="M30 90 L20 340"/><path d="M110 90 L125 340"/><path d="M160 90 L175 340"/>
+            </g>
+            <g stroke="#fff" stroke-width="2.5" opacity=".9">
+              <path d="M-10 175 L200 150"/><path d="M-10 228 L200 215"/><path d="M-10 290 L200 280"/>
+              <path d="M60 90 L55 340"/><path d="M140 90 L150 340"/><path d="M5 110 L190 300"/>
+            </g>
+            <path d="M88 150 L84 185 L90 200 L86 262" stroke="#1f7bf2" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <circle cx="86" cy="270" r="13" fill="#1f7bf2" stroke="#fff" stroke-width="3"/>
+            <path d="M86 262 L92 276 L86 272 L80 276 Z" fill="#fff"/>
+          </svg>
+          <div class="route-card">
+            <div><b>Head down C. de Alcalá</b><br><span style="opacity:.7">High-probability zones</span></div>
+            <div style="text-align:right"><b>5 min</b><br><span style="opacity:.7">2.1 km</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="note">The city moves with NOLEV too<br>↙</div>
+      <div class="chip c1"><span class="ico"><svg width="14" height="14" viewBox="0 0 14 14" fill="#3a8dff"><rect x="1" y="8" width="2" height="5"/><rect x="5" y="5" width="2" height="8"/><rect x="9" y="2" width="2" height="11"/></svg></span>Higher-probability<br>zones</div>
+      <div class="chip c2"><span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3a8dff" stroke-width="2"><path d="M3 11 21 3 13 21 11 13Z"/></svg></span>Follow the route<br>to streets with<br>more options</div>
+    </div>
+  </div>
+</header>
+
+<section class="logos">
+  <div class="wrap">
+    <span class="eyebrow">They already know us at...</span>
+    <div class="marquee"><div class="track"><span class="brand">Repsol</span><span class="brand">Waylet</span><span class="brand">SEAT</span><span class="brand">Telefónica</span><span class="brand">Accenture</span><span class="brand">Ferrovial</span><span class="brand">Indra</span><span class="brand" aria-hidden="true">Repsol</span><span class="brand" aria-hidden="true">Waylet</span><span class="brand" aria-hidden="true">SEAT</span><span class="brand" aria-hidden="true">Telefónica</span><span class="brand" aria-hidden="true">Accenture</span><span class="brand" aria-hidden="true">Ferrovial</span><span class="brand" aria-hidden="true">Indra</span></div></div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="wrap">
+    <div class="intro">
+      <div class="eyebrow">A smarter parking experience</div>
+      <h2>Turn your app into a truly useful parking assistant.</h2>
+      <p>NOLEV plugs into your mobility platform to give your users smart guidance toward the areas where they’re most likely to find street parking.</p>
+      <a href="#" class="link">Discover the product <span>→</span></a>
+    </div>
+    <div class="grid4">
+      <div class="feat">
+        <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="12"/><circle cx="18" cy="18" r="5"/><path d="M18 2v6M18 28v6M2 18h6M28 18h6"/></svg>
+        <h3>Detects the intent<br>to park</h3>
+        <p>Frictionless and perfectly timed, using the context of the journey.</p>
+      </div>
+      <div class="feat">
+        <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 34V18M18 18 6 6M18 18 30 6M3 6h6M6 3v6M27 6h6M30 3v6"/><circle cx="18" cy="18" r="2.5"/></svg>
+        <h3>Guides you to the best<br>streets and zones</h3>
+        <p>Powered by real-time data and predictive intelligence. It takes you where searching makes the most sense.</p>
+      </div>
+      <div class="feat">
+        <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 20 9 10h18l3 10"/><rect x="4" y="20" width="28" height="8" rx="2"/><path d="M7 28v3M29 28v3"/><circle cx="10" cy="24" r="1.3"/><circle cx="26" cy="24" r="1.3"/></svg>
+        <h3>Adapts in real time</h3>
+        <p>Recalculates the route based on availability and city conditions.</p>
+      </div>
+      <div class="feat">
+        <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="30" height="30" rx="4"/><path d="M13 27V9h7a5 5 0 0 1 0 10h-7"/></svg>
+        <h3>Includes alternatives</h3>
+        <p>Paid parking, less congested areas or nearby options when it makes sense.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="como">
+  <div>
+    <div class="eyebrow">How it works</div>
+    <h2>Intelligence<br>at every stage<br>of the journey</h2>
+    <p>From the moment you decide to park until you reach your destination, NOLEV guides you intelligently.</p>
+    <a href="#" class="btn btn-ghost">See the full experience <span class="play-ic"></span></a>
+  </div>
+  <ol class="steps">
+    <li><span class="n">1</span><div><b>Detects when you need to park</b><small>Analyzes the context of your journey.</small></div></li>
+    <li><span class="n">2</span><div><b>Analyzes the best nearby zones</b><small>Evaluates the streets and areas with the highest probability.</small></div></li>
+    <li><span class="n">3</span><div><b>Guides you along the best route</b><small>Takes you through the streets where searching makes the most sense.</small></div></li>
+    <li><span class="n">4</span><div><b>Adapts in real time</b><small>Recalculates if conditions change.</small></div></li>
+    <li><span class="n">5</span><div><b>You reach your destination, stress-free</b><small>More options, better decisions.</small></div></li>
+  </ol>
+</section>
+
+<section class="integ" id="integ">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Simple integration, big impact</div>
+      <h2>Add parking intelligence<br>to your app, hassle-free.</h2>
+      <p>Flexible integration via SDK and APIs, adaptable to different levels of experience and control. We adapt to your use case.</p>
+      <a href="#" class="link">Explore our integrations <span>→</span></a>
+    </div>
+    <div class="code">
+      <div class="tabs"><span class="on">SDK</span><span>API</span><span>DOCUMENTATION</span></div>
+<pre><span class="c">// Initialize NOLEV</span>
+Nolev.configure({
+  apiKey: <span class="s">"YOUR_API_KEY"</span>,
+  mode: <span class="s">"parking_intelligence"</span>
+});
+
+<span class="c">// Start receiving recommendations</span>
+Nolev.start();</pre>
+    </div>
+    <ul class="perks">
+      <li><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m9 10-2 2 2 2M15 10l2 2-2 2"/></svg></span><div><b>Production-ready SDK</b><span>(iOS, Android, Web)</span></div></li>
+      <li><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 8l8 8M16 8l-8 8"/></svg></span><div><b>Modular</b><span>and scalable APIs</span></div></li>
+      <li><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7"/></svg></span><div><b>Clear documentation</b><span>and practical examples</span></div></li>
+      <li><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="10" r="4"/><path d="M4 12a8 8 0 0 1 16 0v3M5 20c1.5-2.5 4-3.5 7-3.5s5.5 1 7 3.5"/></svg></span><div><b>Expert technical support</b><span>at every stage</span></div></li>
+    </ul>
+  </div>
+</section>
+
+
+<script>
+(function(){
+  const hero=document.getElementById('hero');
+  const video=document.getElementById('heroVideo');
+  const play=document.querySelector('.play-big');
+  if(!hero||!video) return;
+  video.muted=true;
+  const tryPlay=async()=>{
+    try{
+      await video.play();
+      hero.classList.add('video-playing');
+      hero.classList.remove('video-error');
+    }catch(e){
+      hero.classList.remove('video-playing');
+    }
+  };
+  window.addEventListener('load', tryPlay, {once:true});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden) tryPlay();});
+  video.addEventListener('playing',()=>{hero.classList.add('video-playing');hero.classList.remove('video-error');});
+  video.addEventListener('pause',()=>{if(!video.ended) hero.classList.remove('video-playing');});
+  video.addEventListener('error',()=>{hero.classList.add('video-error');hero.classList.remove('video-playing');});
+  if(play) play.addEventListener('click',()=>{video.currentTime=0;tryPlay();});
+  setTimeout(()=>{if(video.readyState<2){hero.classList.add('video-error');}},3500);
+})();
+</script>
+</body>
+</html>
